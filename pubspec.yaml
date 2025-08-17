@@ -1,7 +1,8 @@
 name: sharara_bluetooth
-description: "A new Flutter project."
+description: "Sharara Bluetooth is a Flutter plugin for connecting to devices over classic Bluetooth (RFCOMM/SPP). Supports scanning, pairing, and raw data exchange, making it ideal for printers and POS devices. Currently implemented for Android only, as iOS does not allow generic Classic Bluetooth."
 version: 0.0.1
-homepage:
+homepage: "https://github.com/HassanSharara"
+repository: "https://github.com/HassanSharara/sharara_bluetooth.git"
 
 environment:
   sdk: ^3.8.1
