@@ -7,6 +7,7 @@ abstract class ShararaBluetoothPlatform extends PlatformInterface {
   ShararaBluetoothPlatform() : super(token: _token);
 
   static final Object _token = Object();
+  List<BluetoothDevice> lastSeenDevices = [];
 
   static ShararaBluetoothPlatform _instance = MethodChannelShararaBlu();
 

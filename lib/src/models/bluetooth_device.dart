@@ -8,8 +8,8 @@ final class BluetoothDevice {
 
     BluetoothDevice.fromParsed(final dynamic data){
       if( data is! Map || !data.containsKey("address")) throw DeviceBuildingException("10","invalid data ${data.runtimeType}","could not format BluetoothDevice Model cause data: ${data.runtimeType} $data");
-      name = data['name'].toString();
-      address = data['address'].toString();
+      name = data['name'];
+      address = data['address'];
       type = int.tryParse(data['type'].toString());
     }
     Future<bool> get isConnected async => await ShararaBluetoothPlatform.instance.isDeviceConnected(this);

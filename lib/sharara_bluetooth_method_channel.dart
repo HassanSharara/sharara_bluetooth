@@ -10,12 +10,14 @@ import 'package:sharara_bluetooth/sharara_bluetooth_platform_interface.dart';
 
 
 /// An implementation of [ShararaBluetoothPlatform] that uses method channels.
-class MethodChannelShararaBlu extends ShararaBluetoothPlatform {
+class  MethodChannelShararaBlu extends ShararaBluetoothPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('sharara_bluetooth');
 
   final EventChannel devicesEventChannel = EventChannel("sharara_bluetooth/devices");
+
+
   StreamController<List<BluetoothDevice>>? _stream;
   @override
   Stream<List<BluetoothDevice>>? get stream => _stream?.stream;
@@ -30,22 +32,24 @@ class MethodChannelShararaBlu extends ShararaBluetoothPlatform {
         cancelDiscovery();
       });
     }
-    if(_stream != null ) return _stream!.stream;
+    if(_stream != null ) {
+      return _stream!.stream;
+    }
     _stream = StreamController();
-    final List<BluetoothDevice> devices = [];
+
     try {
   devicesEventChannel.receiveBroadcastStream().listen((data){
       if(data is! List)return;
-      devices.clear();
+      lastSeenDevices.clear();
       for(final dynamic data in data){
         try {
           final BluetoothDevice device = BluetoothDevice.fromParsed(data);
-          devices.add(device);
+          lastSeenDevices.add(device);
         }catch(_){}
 
         continue;
       }
-      _stream!.sink.add(devices);
+      _stream!.sink.add(lastSeenDevices);
 
     });
     return _stream!.stream;
