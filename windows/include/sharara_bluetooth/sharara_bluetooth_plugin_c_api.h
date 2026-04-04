@@ -1,5 +1,5 @@
-#ifndef FLUTTER_PLUGIN_sharara_bluetooth_PLUGIN_C_API_H_
-#define FLUTTER_PLUGIN_sharara_bluetooth_PLUGIN_C_API_H_
+#ifndef FLUTTER_PLUGIN_SHARARA_BLUETOOTH_PLUGIN_C_API_H_
+#define FLUTTER_PLUGIN_SHARARA_BLUETOOTH_PLUGIN_C_API_H_
 
 #include <flutter_plugin_registrar.h>
 
@@ -13,11 +13,11 @@
 extern "C" {
 #endif
 
-FLUTTER_PLUGIN_EXPORT void ShararaBluPluginCApiRegisterWithRegistrar(
+FLUTTER_PLUGIN_EXPORT void ShararaBluetoothPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar);
 
 #if defined(__cplusplus)
 }  // extern "C"
 #endif
 
-#endif  // FLUTTER_PLUGIN_sharara_bluetooth_PLUGIN_C_API_H_
+#endif  // FLUTTER_PLUGIN_SHARARA_BLUETOOTH_PLUGIN_C_API_H_

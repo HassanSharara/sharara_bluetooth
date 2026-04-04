@@ -7,11 +7,11 @@
 #include "generated_plugin_registrant.h"
 
 #include <permission_handler_windows/permission_handler_windows_plugin.h>
-#include <sharara_bluetooth/sharara_blu_plugin_c_api.h>
+#include <sharara_bluetooth/sharara_bluetooth_plugin_c_api.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   PermissionHandlerWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("PermissionHandlerWindowsPlugin"));
-  ShararaBluPluginCApiRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("ShararaBluPluginCApi"));
+  ShararaBluetoothPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("ShararaBluetoothPluginCApi"));
 }

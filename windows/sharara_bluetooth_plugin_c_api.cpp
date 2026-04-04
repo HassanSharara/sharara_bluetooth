@@ -4,9 +4,9 @@
 
 #include "sharara_bluetooth_plugin.h"
 
-void ShararaBluPluginCApiRegisterWithRegistrar(
+void ShararaBluetoothPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
-  sharara_bluetooth::ShararaBluPlugin::RegisterWithRegistrar(
+  sharara_bluetooth::ShararaBluetoothPlugin::RegisterWithRegistrar(
       flutter::PluginRegistrarManager::GetInstance()
           ->GetRegistrar<flutter::PluginRegistrarWindows>(registrar));
 }

@@ -54,7 +54,7 @@ class BluetoothHandler(private val flutterPluginBinding: FlutterPlugin.FlutterPl
     // Connection timeout
     private companion object {
         const val CONNECTION_TIMEOUT_MS = 10000L
-        const val DISCOVERY_CLEANUP_DELAY = 500L
+        const val DISCOVERY_CLEANUP_DELAY = 1000L
     }
 
     init {
@@ -183,6 +183,22 @@ class BluetoothHandler(private val flutterPluginBinding: FlutterPlugin.FlutterPl
         }
     }
 
+    private fun createSocket(device: BluetoothDevice, uuid: UUID): BluetoothSocket {
+        return try {
+            // STRATEGY 1: Insecure RFCOMM (Most reliable for cheap printers)
+            device.createInsecureRfcommSocketToServiceRecord(uuid)
+        } catch (e: Exception) {
+            try {
+                // STRATEGY 2: Standard Secure
+                device.createRfcommSocketToServiceRecord(uuid)
+            } catch (e2: Exception) {
+                // STRATEGY 3: Reflection (Direct Port 1)
+                val method = device.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
+                method.invoke(device, 1) as BluetoothSocket
+            }
+        }
+    }
+
     private suspend fun connect(call: MethodCall, result: Result) = withContext(Dispatchers.IO) {
         // Close existing connection if any
         bluetoothSocket?.let { socket ->
@@ -208,17 +224,15 @@ class BluetoothHandler(private val flutterPluginBinding: FlutterPlugin.FlutterPl
         val serviceUuid = UUID.fromString(uuid)
 
         // Create socket with proper error handling
-        val socket = try {
-            device.createRfcommSocketToServiceRecord(serviceUuid)
-        } catch (e: Exception) {
-            throw IOException("Failed to create RFCOMM socket: ${e.message}", e)
-        }
+        val socket = createSocket(device, serviceUuid)
 
-        // Cancel discovery to improve connection performance
+        println("canceling discovering while connecting ")
         if (adapter.isDiscovering) {
             adapter.cancelDiscovery()
-            delay(100) // Small delay to ensure discovery is fully cancelled
+            delay(250) // Small delay to ensure discovery is fully cancelled
         }
+
+        println("canceling is done ")
 
         // Connect with timeout
         withTimeout(CONNECTION_TIMEOUT_MS) {
@@ -259,39 +273,37 @@ class BluetoothHandler(private val flutterPluginBinding: FlutterPlugin.FlutterPl
     }
 
     private suspend fun writeToDevice(call: MethodCall, result: Result) = withContext(Dispatchers.IO) {
-        val arguments = call.arguments as? Map<*, *>
-            ?: throw IllegalArgumentException("Arguments cannot be null")
 
-        val address = arguments["address"] as? String
-            ?: throw IllegalArgumentException("Address is required")
-
-        val data = arguments["data"] as? List<*>
-            ?: throw IllegalArgumentException("Data is required")
+        val map = call.arguments as Map<*,*>
+        val address = map["address"] as? String ?: ""
+        val data = map["data"] as? List<*> ?: emptyList<Int>()
 
         val currentSocket = bluetoothSocket
-
-        if (currentSocket?.remoteDevice?.address != address) {
-            throw IOException("Device with address $address is not connected")
+        if (currentSocket == null || !currentSocket.isConnected) {
+            throw IOException("Not connected")
         }
 
-        if (currentSocket.isConnected.not()) {
-            throw IOException("Socket is not connected")
-        }
-
-        val bytes = data.filterIsInstance<Int>()
-            .map { it.toByte() }
-            .toByteArray()
-
-        if (bytes.isEmpty()) {
-            throw IllegalArgumentException("No valid data to write")
-        }
-
-        println("start writing ")
+        val bytes = data.filterIsInstance<Int>().map { it.toByte() }.toByteArray()
         val outputStream = currentSocket.outputStream
-        outputStream.write(bytes)
-        outputStream.flush()
-        withContext(Dispatchers.Main) {
-            result.success(true)
+
+        // High-Performance Chunking Logic
+        // Sending 512 bytes at a time is the "Safe Zone" for most 58mm printers
+        val chunkSize = 512
+        var offset = 0
+
+        try {
+            while (offset < bytes.size) {
+                val end = (offset + chunkSize).coerceAtMost(bytes.size)
+                outputStream.write(bytes, offset, end - offset)
+                outputStream.flush()
+                offset = end
+                // 10ms delay gives the printer time to move the physical head
+                delay(10)
+            }
+
+            withContext(Dispatchers.Main) { result.success(true) }
+        } catch (e: Exception) {
+            throw IOException("Write failed: ${e.message}")
         }
     }
 
@@ -313,8 +325,11 @@ class BluetoothHandler(private val flutterPluginBinding: FlutterPlugin.FlutterPl
         currentReceiver = createDiscoveryReceiver()
 
         try {
-            context.registerReceiver(currentReceiver, intentFilter)
-        } catch (e: Exception) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(currentReceiver, intentFilter, Context.RECEIVER_EXPORTED)
+            } else {
+                context.registerReceiver(currentReceiver, intentFilter)
+            }        } catch (e: Exception) {
             cleanupDiscovery()
             result.error("34", "Failed to register receiver", e.message ?: "Unknown error")
             return

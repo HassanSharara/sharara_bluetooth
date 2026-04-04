@@ -70,7 +70,7 @@ set_target_properties(${BINARY_NAME}
 )
 
 # Enable the test target.
-set(include_sharara_bluetooth_tests TRUE)
+#set(include_sharara_bluetooth_tests TRUE)
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.

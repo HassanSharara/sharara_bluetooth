@@ -113,6 +113,8 @@ class  MethodChannelShararaBlu extends ShararaBluetoothPlatform {
     final bool r = res is bool && res == true;
     return r;
   }
+
+
   @override
   Future<bool> forceConnecting(BluetoothDevice device, {final String uuid = "00001101-0000-1000-8000-00805F9B34FB"}) async{
    final dynamic res =  await methodChannel.invokeMethod("forceConnecting",{

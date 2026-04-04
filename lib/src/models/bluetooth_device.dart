@@ -17,6 +17,6 @@ final class BluetoothDevice {
     Future<bool>  connect() async => ShararaBluetoothPlatform.instance.connect(this);
     Future<bool> writeData(final dynamic data)async{
       if( !await isConnected )return false;
-      return ShararaBluetoothPlatform.instance.writeToDevice(this, data: data);
+      return await ShararaBluetoothPlatform.instance.writeToDevice(this, data: data);
     }
  }
